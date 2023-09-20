@@ -7,6 +7,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center p-24">
       This is the administrator panel!
       <NewPostForm />
+      <PostsList />
     </main>
   )
 }

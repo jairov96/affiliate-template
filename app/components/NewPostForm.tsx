@@ -1,58 +1,110 @@
-import React, { useState } from 'react';
-import { MDXEditor } from '@mdxeditor/editor/MDXEditor';
+import React, { useState } from "react";
+import dynamic from "next/dynamic";
+import grayMatter from "gray-matter";
+import ReactMarkdown from "react-markdown";
 
-function NewPostForm() {
-    const defaultTemplate = `
----
+import "react-markdown-editor-lite/lib/index.css";
+
+const MdEditor = dynamic(() => import("react-markdown-editor-lite"), {
+  ssr: false,
+});
+
+interface Metadata {
+  title: string;
+  description: string;
+  slug: string;
+  [key: string]: string;
+}
+
+const NewPostForm: React.FC = () => {
+  const defaultTemplate = `---
 title: Example Title
 description: Description
 slug: Slug
 ---
 
-Your content goes here...
+Your content here...
 `;
 
-    const [mdxContent, setMdxContent] = useState<string>(defaultTemplate);
+  const [mdContent, setMdContent] = useState(defaultTemplate);
+  const { data } = grayMatter(mdContent);
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+  const [isLoading, setIsLoading] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-        // Send the MDX content to your API endpoint
-        const response = await fetch('/api/posts', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ mdxContent }),
-        });
+  const isMetadataValid = (): boolean => {
+    return data.title && data.description && data.slug;
+  };
 
-        const data = await response.json();
-        // Handle the response as needed
+  const handleSubmit = async () => {
+    if (!isMetadataValid()) return;
+
+    setIsLoading(true);
+    setFeedbackMessage(null);
+    try {
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ markdown: mdContent }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create post.");
+      }
+
+      const responseData = await response.json();
+      setFeedbackMessage(
+        "Post successfully created with ID: " + responseData.id
+      );
+      setMdContent(defaultTemplate); // Reset the editor content
+    } catch (error: any) {
+      setFeedbackMessage(error.message || "Something went wrong.");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const getMetadataPreview = () => {
-        const metadata = mdxContent.split('---')[1].trim().split('\n');
-        return metadata.map((meta) => <p key={meta}>{meta}</p>);
-    };
-
-    return (
-        <div className="w-full">
-            <form onSubmit={handleSubmit} className="flex flex-col">
-                <MDXEditor 
-                    markdown={mdxContent} 
-                    onChange={(value: string) => setMdxContent(value)} 
-                    className="w-full mb-4 border rounded-md p-2"
-                />
-                <button type="submit" className="self-end bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Create Post
-                </button>
-            </form>
-            <div className="mt-4">
-                <h2 className="text-xl font-bold mb-2">Metadata Preview:</h2>
-                {getMetadataPreview()}
-            </div>
-        </div>
-    );
-}
+  return (
+    <div className="container mx-auto my-10">
+      <MdEditor
+        value={mdContent}
+        style={{ height: "500px" }}
+        onChange={({ text }) => setMdContent(text)}
+        renderHTML={(text) => <ReactMarkdown>{text}</ReactMarkdown>}
+      />
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-3">Metadata:</h2>
+        {Object.keys(data).length === 0 ? (
+          <p>No metadata available</p>
+        ) : (
+          <ul className="list-disc pl-5">
+            {Object.entries(data).map(([key, value], index) => (
+              <li key={index}>
+                <strong>{key}:</strong> {value}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <button
+        className={`mt-6 px-6 py-3 rounded-md focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 
+        ${
+          isMetadataValid()
+            ? "bg-blue-600 text-white hover:bg-blue-700"
+            : "bg-gray-400 text-gray-700 cursor-not-allowed"
+        }`}
+        onClick={handleSubmit}
+        disabled={!isMetadataValid() || isLoading}
+      >
+        {isLoading ? "Submitting..." : "Submit"}
+      </button>
+      <div>
+        {feedbackMessage && <p className="mt-6 text-center">{feedbackMessage}</p>}
+      </div>
+    </div>
+  );
+};
 
 export default NewPostForm;

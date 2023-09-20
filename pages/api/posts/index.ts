@@ -1,29 +1,34 @@
 import { PrismaClient } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { authMiddleware } from '../authMiddleware';
+import matter from 'gray-matter';
+
 
 const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    authMiddleware(req, res, async () => {
-        const { title, content, description, slug } = req.body;
+    try {
+      const { markdown } = req.body;
 
-        try {
-            const post = await prisma.post.create({
-                data: {
-                    title,
-                    content,
-                    description,
-                    slug,
-                },
-            });
-            return res.status(201).json(post);
-        } catch (error) {
-            return res.status(500).json({ error: 'Unable to create post' });
-        }
-    });
-}
+      // Extract data using gray-matter
+      const { data, content } = matter(markdown);
+
+      // Store the post in the database
+      const post = await prisma.post.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          content: content,
+          slug: data.slug || data.title.toLowerCase().replace(/ /g, '-'),
+          // Add other fields like createdAt, tags, etc. from `data` as needed
+        },
+      });
+
+      res.status(201).json(post);
+    } catch (error) {
+      res.status(500).json({ error: 'Unable to create post' });
+    }
+  }
   
   if (req.method === 'GET') {
    try {
