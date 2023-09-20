@@ -1,13 +1,25 @@
 'use client'
-import { PostsList } from '../components/PostList';
+import PostList from '../components/PostList';
 import NewPostForm from '../components/NewPostForm';
 
-export default function Home() {
+const AdminPage: React.FC = () => {
+
+  const handleEdit = (postId: string) => {
+    window.location.href = `/admin/edit/${postId}`;
+  };
+
+  const handleDelete = (postId: string) => {
+    // Implement the delete functionality here...
+    // For example, make an API call to delete the post, then refresh the list
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
-      This is the administrator panel!
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
       <NewPostForm />
-      <PostsList />
-    </main>
-  )
-}
+      <PostList onEdit={handleEdit} onDelete={handleDelete} />
+    </div>
+  );
+};
+
+export default AdminPage
