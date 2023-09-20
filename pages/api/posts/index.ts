@@ -5,6 +5,7 @@ import matter from 'gray-matter';
 
 const prisma = new PrismaClient();
 
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
@@ -24,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.status(201).json(post);
     } catch (error) {
       res.status(500).json({ error: 'Unable to create post' });
@@ -31,13 +33,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   if (req.method === 'GET') {
-   try {
-      const posts = await prisma.post.findMany();
-      return res.status(200).json(posts);
+    const skip = Number(req.query.skip) || 0;
+    const take = Number(req.query.take) || 5;
+
+    try {
+      const posts = await prisma.post.findMany({
+        skip: skip,
+        take: take,
+        orderBy: { createdAt: 'desc' }, // Assuming you have a 'createdAt' column. Order them by latest.
+      });
+      const totalPosts = await prisma.post.count();
+      return res.status(200).json({ posts, totalPosts });
     } catch (error) {
       return res.status(500).json({ error: 'Unable to fetch posts.' });
     }
-  } else {
-    return res.status(405).end(); // Method Not Allowed
   }
 }

@@ -1,5 +1,4 @@
-// components/PostList.tsx
-
+'use client'
 import React, { useState, useEffect } from 'react';
 
 interface Post {
@@ -12,18 +11,34 @@ interface Props {
   onEdit?: (postId: string) => void;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 const PostList: React.FC<Props> = ({ onDelete, onEdit }) => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPosts, setTotalPosts] = useState<number>(0);
+
+  const fetchPosts = async (page: number) => {
+    const skip = (page - 1) * ITEMS_PER_PAGE;
+    try {
+      const response = await fetch(`/api/posts?skip=${skip}&take=${ITEMS_PER_PAGE}`);
+      const { posts, totalPosts } = await response.json();
+      setPosts(posts);
+      setTotalPosts(totalPosts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
 
   useEffect(() => {
-    fetch('/api/posts')
-      .then(response => response.json())
-      .then(data => setPosts(data))
-      .catch(error => console.error("Error fetching posts:", error));
-  }, []);
+    fetchPosts(currentPage);
+  }, [currentPage]);
+
+  const totalPages = Math.ceil(totalPosts / ITEMS_PER_PAGE);
 
   return (
-    <ul>
+    <div>
+      <ul>
       {posts.map(post => (
         <li key={post.id} className="mb-4">
           <h2 className="text-xl">{post.title}</h2>
@@ -44,6 +59,19 @@ const PostList: React.FC<Props> = ({ onDelete, onEdit }) => {
         </li>
       ))}
     </ul>
+
+      <div className="mt-4">
+        {[...Array(totalPages)].map((_, index) => (
+          <button 
+            key={index}
+            onClick={() => setCurrentPage(index + 1)}
+            className={`px-4 py-2 mx-1 ${index + 1 === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 
