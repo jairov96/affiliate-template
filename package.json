@@ -18,7 +18,7 @@
     "autoprefixer": "10.4.15",
     "axios": "^1.5.0",
     "eslint": "8.49.0",
-    "eslint-config-next": "13.4.19",
+    "eslint-config-next": "13.5.2",
     "gray-matter": "^4.0.3",
     "markdown-it": "^13.0.1",
     "mdx-editor": "^0.0.1",
