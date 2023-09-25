@@ -6,11 +6,19 @@ const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const slug = req.query.slug as string;
+    const fields = (req.query.fields as string)?.split(",");
+    
 
     if (req.method === 'GET') {
         try {
+            const selectFields = fields.reduce((acc: { [key: string]: boolean }, field) => {
+                acc[field] = true;
+                return acc;
+            }, {});
+            
             const post = await prisma.post.findUnique({
                 where: { slug },
+                select: selectFields,
             });
             if (!post) {
                 return res.status(404).json({ error: 'Post not found' });
