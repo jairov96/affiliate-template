@@ -1,7 +1,8 @@
 import NextAuth, { SessionOptions, User } from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-export default NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -25,12 +26,8 @@ export default NextAuth({
     }),
   ],
 
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
-  },
 
-  session: {},
-});
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
