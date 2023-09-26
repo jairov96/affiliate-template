@@ -7,7 +7,7 @@ import grayMatter from "gray-matter";
 const TEMPLATE_MARKDOWN = `---
 title: Example Title
 description: Description
-slug: Slug
+slug: slug
 ---
 
 Your content here...

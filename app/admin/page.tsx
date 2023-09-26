@@ -1,9 +1,8 @@
 'use client'
-import PostList from '../components/PostList';
-import NewPostForm from '../components/NewPostForm';
+import { useSession } from 'next-auth/react';
 
 const AdminPage: React.FC = () => {
-
+  const session = useSession();
   const handleEdit = (postId: string) => {
     window.location.href = `/admin/edit/${postId}`;
   };
@@ -15,9 +14,10 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
-      <NewPostForm />
-      <PostList onEdit={handleEdit} onDelete={handleDelete} />
+      <h1 className="text-2xl font-bold mb-4">Admin Panel OMG</h1>
+
+      {session.user ? (<p>user logged</p>): (<p>User not logged</p>)}
+
     </div>
   );
 };
