@@ -3,8 +3,11 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest, res: NextResponse) {
-  const slug = req.nextUrl.searchParams.get("slug") as string;
+
+export async function GET(req: NextRequest, { params }: { params: { slug: string } }, res: NextResponse ) {
+
+    const slug = params.slug
+  
   const fields = (req.nextUrl.searchParams.get("fields") as string)?.split(",");
 
   try {
