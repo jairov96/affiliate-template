@@ -18,7 +18,7 @@ const isValidSlug = (slug: string) => {
   return regex.test(slug);
 };
 
-const NewPostPage: React.FC = () => {
+function NewPostPage() {
   const [markdownContent, setMarkdownContent] = useState(TEMPLATE_MARKDOWN);
   const [isLoading, setIsLoading] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
